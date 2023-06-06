@@ -23,7 +23,7 @@ to optimise for performance:
 odin build . -o:speed -out:bin/sqong
 ```
 
-If you want develop with the code just run:
+If you want to develop with the code just run:
 
 ```odin
 odin run . -out:bin/sqong
@@ -52,16 +52,16 @@ That's it.
 
 These things may never happen.
 
-- Menu with choices for theme/difficulty/audio
-- Visible countdown before each serve
-- Matches and games with side-switching
-- Stress/stamina/aggression meter(s)
-- Music adapts to game situation
-- Game modes
-- Better spin physics
-- Additional strike styles (chip, arrow/straight, powershot)
-- Pseudo-3D (ball scales close to net, casts a shadow)
-- Context-dependent physics (grass level [no slide], ice level [slide], etc.)
+- [ ] Menu with choices for theme/difficulty/audio
+- [ ] Visible countdown before each serve
+- [ ] Matches and games with side-switching
+- [ ] Stress/stamina/aggression meter(s)
+- [ ] Music adapts to game situation
+- [ ] Game modes
+- [ ] Better spin physics
+- [ ] Additional strike styles (chip, arrow/straight, powershot)
+- [ ] Pseudo-3D (ball scales close to net, casts a shadow)
+- [ ] Context-dependent physics (grass level [no slide], ice level [slide], etc.)
 
 # Changelog
 
