@@ -35,7 +35,7 @@ This will compile faster and also run the executable.
 
 Theme music and score FX are original, quick compositions.
 
-The collision FX gently processed mouth sounds.
+The collision FX consist of my own gently processed mouth sounds.
 
 You are free to reuse both.
 
