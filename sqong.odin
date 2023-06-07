@@ -9,7 +9,6 @@ Window :: struct {
     width:         i32, 
     height:        i32,
     fps:           i32,
-    control_flags: rl.ConfigFlags,
 }
 
 Paddle :: struct {
@@ -53,9 +52,8 @@ State :: enum {
 main :: proc() {
 
     // INIT
-    window := Window{"Sqong", WIN_DIM.x, WIN_DIM.y, 60, rl.ConfigFlags{ .WINDOW_RESIZABLE }}
+    window := Window{"Sqong", WIN_DIM.x, WIN_DIM.y, 60}
     rl.InitWindow(window.width, window.height, window.name)
-    rl.SetWindowState(window.control_flags)
     rl.SetTargetFPS(window.fps)
 
     currentScreen := State.LOGO

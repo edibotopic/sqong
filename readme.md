@@ -59,6 +59,7 @@ That's it.
 
 ## Nice-to-haves
 
+- [ ] Allow window resize
 - [ ] Menu with choices for theme/difficulty/audio
 - [ ] Visible countdown before each serve
 - [ ] Matches and games with side-switching
