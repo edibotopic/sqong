@@ -1,9 +1,16 @@
 package main
 
-import "core:fmt"
 import m "core:math/linalg/hlsl"
 import rnd "core:math/rand"
 import rl "vendor:raylib"
+
+Window :: struct { 
+    name:          cstring,
+    width:         i32, 
+    height:        i32,
+    fps:           i32,
+    control_flags: rl.ConfigFlags,
+}
 
 Paddle :: struct {
     pos : m.float2,
@@ -17,21 +24,21 @@ Paddle :: struct {
 p1, p2 : Paddle
 
 Ball :: struct {
-    pos : m.float2,
-    vel : m.float2,
-    r : f32,
-    col : rl.Color,
+    pos :   m.float2,
+    vel :   m.float2,
+    r :     f32,
+    col :   rl.Color,
 }
 
 ball : Ball
 
 Theme :: struct {
-    bg_main : rl.Color,
-    txt_dark : rl.Color,
+    bg_main :   rl.Color,
+    txt_dark :  rl.Color,
     txt_light : rl.Color,
-    p1 : rl.Color,
-    p2 : rl.Color,
-    ball : rl.Color,
+    p1 :        rl.Color,
+    p2 :        rl.Color,
+    ball :      rl.Color,
 }
 
 theme : Theme
@@ -46,11 +53,14 @@ State :: enum {
 main :: proc() {
 
     // INIT
-    rl.InitWindow(WIN_DIM.x, WIN_DIM.y, "Sqong")
+    window := Window{"Sqong", WIN_DIM.x, WIN_DIM.y, 60, rl.ConfigFlags{ .WINDOW_RESIZABLE }}
+    rl.InitWindow(window.width, window.height, window.name)
+    rl.SetWindowState(window.control_flags)
+    rl.SetTargetFPS(window.fps)
+
     currentScreen := State.LOGO
     framesCounter := 0
     scoreCounter := 0
-    rl.SetTargetFPS(60)
 
     // Colors
     theme.bg_main = CHAMPAGNE
@@ -69,23 +79,29 @@ main :: proc() {
 
     // Audio
     rl.InitAudioDevice()
-    strike_fx1 := rl.LoadSound("./assets/hit5.ogg")                     // paddle
-    strike_fx2 := rl.LoadSound("./assets/hit2.ogg")                     // wall
-    strike_fx3 := rl.LoadSound("./assets/hit4.ogg")                     // spin
-    score_fx1 := rl.LoadSound("./assets/score3.ogg")                    // P1
-    score_fx2 := rl.LoadSound("./assets/score4.ogg")                    // CPU
-    back_fx1 := rl.LoadMusicStream("./assets/tuneSynth.ogg")            // Game
-    back_fx2 := rl.LoadMusicStream("./assets/tuneFullLargeWithGap.ogg") // Title
+    strike_fx1 :=   rl.LoadSound("./assets/hit5.ogg")                       // paddle
+    strike_fx2 :=   rl.LoadSound("./assets/hit2.ogg")                       // wall
+    strike_fx3 :=   rl.LoadSound("./assets/hit4.ogg")                       // spin
+    score_fx1 :=    rl.LoadSound("./assets/score3.ogg")                     // P1
+    score_fx2 :=    rl.LoadSound("./assets/score4.ogg")                     // CPU
+    back_fx1 :=     rl.LoadMusicStream("./assets/tuneSynth.ogg")            // Game
+    back_fx2 :=     rl.LoadMusicStream("./assets/tuneFullLargeWithGap.ogg") // Title
     rl.SetSoundVolume(strike_fx1, 0.4)
 
     // Ball
-    ball.r = BALL_RADIUS
-    ball.pos = {f32(WIN_DIM.x/2), f32(WIN_DIM.y/2)} 
-    ball.vel = m.float2{rnd.float32_normal(X_MEAN,X_SDEV), rnd.float32_normal(Y_MEAN,Y_SDEV)}
-    ball.col = theme.ball
+    ball.r =    BALL_RADIUS
+    ball.pos =  {f32(WIN_DIM.x/2), f32(WIN_DIM.y/2)} 
+    ball.vel =  m.float2{rnd.float32_normal(X_MEAN,X_SDEV), rnd.float32_normal(Y_MEAN,Y_SDEV)}
+    ball.col =  theme.ball
+
+    // Pause
+    Paused : bool = false
 
     // UPDATE
     for !rl.WindowShouldClose() {
+
+        if rl.IsKeyPressed(rl.KeyboardKey.SPACE) {Paused = !Paused}
+
         switch currentScreen
         {
             case .LOGO:
@@ -110,9 +126,14 @@ main :: proc() {
             case .GAME:
             {
                 rl.StopMusicStream(back_fx2)
-
-                rl.PlayMusicStream(back_fx1)
                 rl.UpdateMusicStream(back_fx1)
+                rl.PlayMusicStream(back_fx1)
+
+                if !Paused {
+                    rl.SetMusicVolume(back_fx1, 0.8)
+                } else {
+                    rl.SetMusicVolume(back_fx1, 0.2)
+                }
 
                 if rl.IsKeyDown(rl.KeyboardKey.X) || p1.scr == MAX_SCORE || p2.scr == MAX_SCORE
                 {
@@ -133,6 +154,7 @@ main :: proc() {
             } break
         }
 
+        // DRAW
         rl.BeginDrawing()
 
         rl.ClearBackground(theme.bg_main)
@@ -146,15 +168,11 @@ main :: proc() {
             } break
             case .TITLE:
             {
-                rl.PlayMusicStream(back_fx1)
-
                 drawTitle()
 
             } break
             case .GAME:
             {
-                rl.PlayMusicStream(back_fx2)
-
                 drawNet() 
                 
                 drawScores()
@@ -165,13 +183,17 @@ main :: proc() {
                 rl.DrawRectangleRounded(P1, 0.7, 0, p1.col)
                 rl.DrawRectangleRounded(P2, 0.7, 0, p2.col)
 
+                drawBall()
+
+                if !Paused {
+
                 playerControls()
                 
                 cpuAI()
 
                 setBoundaries()
                 
-                drawMovingBall()
+                moveBall()
 
                 p1.hit = false
                 p2.hit = false
@@ -254,6 +276,11 @@ main :: proc() {
                 } 
 
             trackWinner()
+            }
+
+            if Paused {
+                rl.DrawText("Paused", WIN_DIM.x/2-rl.MeasureText("Paused", 40)/2, WIN_DIM.y/2, 40, theme.txt_dark)
+            }
 
             } break
             case .END:
@@ -279,10 +306,10 @@ main :: proc() {
     rl.CloseWindow()
 }
 
-// Constants for window
+// Constants and Globals
 WIN_DIM :: m.int2{600, 400}
 
-// Constants for theme(s)
+// Theme
 CHAMPAGNE :: rl.Color{ 255, 221, 163, 255 }
 MUDDY     :: rl.Color{ 115, 86, 63, 255 }
 SANDY     :: rl.Color{ 127, 106, 79, 255 }
@@ -291,22 +318,22 @@ ORANGE1   :: rl.Color{ 214, 86, 58, 255 }
 ORANGE2   :: rl.Color{ 229, 130, 64, 255 }
 ORANGE3   :: rl.Color{ 244, 165, 68, 255 }
 
-// Constants for rnd
+// Random
 X_MEAN : f32 : 2.8
 X_SDEV : f32 : 0.3
 Y_MEAN : f32 : 0.5
 Y_SDEV : f32 : 0.2
 
-// Constants for collisions
+// Collisions
 DAMP_WALL : f32 : 0.7
 DAMP_SPIN : f32 : 0.8
 ACCEL_SPIN : f32 : 1.5
 
-// Constants for physics
+// Physics
 BALL_RADIUS : f32 : 10.0
 BALL_SPEED_MULT : f32 : 1.1
 
-// Constants and variables for players
+// Players
 P1_START_POS : i32 : 30
 P2_START_POS : i32 : 555
 PLAYERS_WIDTH : f32 : 15.0
@@ -314,13 +341,13 @@ PLAYERS_HEIGHT : f32 : 60.0
 P1_SPEED : f32 = 2.0
 CPU_SPEED : f32 = 1.5
 
-// Constants for score
+// Scores
 MIN_SCORE : i32 : 0
 MAX_SCORE : i32 : 4
-
 winner : string = "It's a draw!"
 
-// Debug
+// Procedures
+
 debugShow :: proc () {
     rl.DrawText(rl.TextFormat("%f", ball.vel), WIN_DIM.x-150, WIN_DIM.y-25, 20, rl.RED)
     rl.DrawFPS(25, WIN_DIM.y-25)
@@ -328,12 +355,12 @@ debugShow :: proc () {
 
 drawLogo :: proc () {
     rl.DrawText("SQONG", 20, 20, 40, theme.txt_light)
-    rl.DrawText("Loading...", 270, 200, 20, theme.txt_dark)
+    rl.DrawText("Loading...", WIN_DIM.x/2-rl.MeasureText("Loading...", 20)/2, 200, 20, theme.txt_dark)
 }
 
 drawTitle :: proc () {
     rl.DrawText("SQONG", 20, 20, 40, theme.txt_light)
-    rl.DrawText("Controls: W (up), S (down), X (quit)", 20, 120, 20, theme.txt_dark)
+    rl.DrawText("Controls: W (up), S (down), SPACE (pause), X (quit)", 20, 120, 20, theme.txt_dark)
     rl.DrawText("Start game: ENTER", 20, 170, 20, theme.txt_dark)
     rl.DrawText("Rules: P1 on left, score 4 to win", 20, 220, 20, theme.txt_dark)
     rl.DrawText("Close game: ESC", 20, 270, 20, theme.txt_dark)
@@ -356,6 +383,7 @@ playerControls :: proc () {
     if rl.IsKeyDown(rl.KeyboardKey.S) {p1.pos.y += p1.spd}
 }
 
+// TODO: fix jerky movement here
 cpuAI :: proc () {
     if (p2.pos.y + p2.dim.y/2) > ball.pos.y && ball.vel.x > 0 {
         // p2.pos.y -= (m.abs(ball.pos.y-p2.pos.y))*0.10 NOTE: tired lunge
@@ -386,9 +414,12 @@ setBoundaries :: proc() {
     }
 }
 
-drawMovingBall :: proc() {
-    ball.pos += ball.vel*BALL_SPEED_MULT
+drawBall :: proc() {
     rl.DrawCircle(i32(ball.pos.x), i32(ball.pos.y), ball.r, ball.col)
+}
+
+moveBall :: proc() {
+    ball.pos += ball.vel*BALL_SPEED_MULT
 }
 
 drawEndScreen :: proc() {
