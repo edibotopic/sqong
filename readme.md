@@ -1,9 +1,13 @@
 # Sqong
 
-v0.1.2
+v0.1.3
 
 Pong-clone written in the [Odin language](http://odin-lang.org/) using the [Raylib](https://www.raylib.com/) programming library.
-The game was made in a weekend to learn Odin and take a break from some infuriating web projects.
+The game was initially made in a weekend to learn the basics of the Odin language.
+I have since revisited the project to learn more about entity systems and
+memory management.
+
+# Running
 
 To compile and run you will need to have Odin [installed](https://odin-lang.org/docs/install/) and on your path.
 After you `git clone` this repo, change to the `/sqong/` directory and run `make`.
@@ -33,7 +37,7 @@ This will compile faster and also run the executable.
 
 # Audio
 
-Theme music and score FX are original, quick compositions.
+Theme music and score FX are original, quick-and-dirty compositions.
 
 The collision FX consist of my own gently processed mouth sounds.
 
@@ -56,6 +60,7 @@ That's it.
 - [ ] Improve CPU/AI movement
 - [ ] Less clunky title menu
 - [ ] Continue refactoring code
+- [x] Basic entity system
 
 ## Nice-to-haves
 
@@ -73,6 +78,7 @@ That's it.
 
 # Changelog
 
+- v0.1.3: added an entity system, moved logic to external functions
 - v0.1.2: added pause, started refactoring, updated readme
 - v0.1.1: added makefile, updated instructions, added links
 - v0.1.0: initial release
